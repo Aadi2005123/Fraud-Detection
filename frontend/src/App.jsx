@@ -25,7 +25,7 @@ import {
   Zap,
 } from 'lucide-react'
 
-const RENDER_BACKEND_URL = 'https://fraud-detection-1-ky1b.onrender.com'
+const RENDER_BACKEND_URL = 'https://fraud-detection-0w6x.onrender.com'
 const LOCAL_BACKEND_URL = 'http://localhost:8000'
 
 const BASE_API =
