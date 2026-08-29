@@ -9,3 +9,5 @@ services:
         value: 3.11.9
       - key: MONGODB_DATABASE
         value: fraud_detector
+      - key: FRONTEND_URL
+        sync: false   # Set this in the Render dashboard to your deployed frontend URL

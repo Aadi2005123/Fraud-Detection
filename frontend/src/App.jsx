@@ -291,8 +291,8 @@ function formatCurrency(num) {
 function humanizeError(rawMessage) {
   if (!rawMessage) return 'An unexpected error occurred. Please try again.'
   const msg = String(rawMessage)
-  if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-    return 'Fraud Engine service is unreachable. Please ensure the backend is active.'
+  if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ERR_CONNECTION_REFUSED')) {
+    return 'Fraud Engine service is currently unavailable. Please try again.'
   }
   if (msg.includes('Sender account not found')) return 'Sender account could not be found.'
   if (msg.includes('Receiver account not found')) return 'Receiver account could not be found.'

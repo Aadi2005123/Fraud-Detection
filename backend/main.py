@@ -49,6 +49,10 @@ app = FastAPI(title="PaySim Fraud Detector API", version="2.0.0")
 # Support custom CORS origins via env var or default comprehensive list
 cors_origins_env = os.getenv("CORS_ORIGINS", "")
 custom_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+
+# FRONTEND_URL allows a single deployed frontend origin (e.g. Vercel/Netlify/custom)
+frontend_url = os.getenv("FRONTEND_URL", "").strip()
+
 default_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -58,6 +62,8 @@ default_origins = [
     "http://127.0.0.1:8000",
     "https://fraud-detection-0w6x.onrender.com",
 ]
+if frontend_url and frontend_url not in default_origins:
+    default_origins.append(frontend_url)
 allowed_origins = list(dict.fromkeys(default_origins + custom_origins))
 
 app.add_middleware(
