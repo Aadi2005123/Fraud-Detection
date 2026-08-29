@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timezone, timedelta
 from typing import Any
 from uuid import uuid4
@@ -35,27 +36,49 @@ from .schemas import (
     TransactionConfirmResponse,
 )
 
-SRC_PATH = str(Path(__file__).resolve().parents[1] / "src")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+REPORTS_DIR = PROJECT_ROOT / "reports"
+SRC_PATH = str(PROJECT_ROOT / "src")
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 from risk_engine import RiskEngine
 from risk_engine.adapters import AMLSimAdapter, BankSimAdapter, FraudGraphAdapter, IEEECISAdapter, PaySimAdapter
 
 app = FastAPI(title="PaySim Fraud Detector API", version="2.0.0")
+
+# Support custom CORS origins via env var or default comprehensive list
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+custom_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+default_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://fraud-detection-1-ky1b.onrender.com",
+]
+allowed_origins = list(dict.fromkeys(default_origins + custom_origins))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-    ],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.onrender\.com|https://.*\.vercel\.app|https://.*\.netlify\.app|http://localhost:\d+|http://127\.0\.0\.1:\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "service": "Fraud Detection API",
+        "version": "2.0.0",
+        "docs": "/docs",
+        "health": "/health",
+        "models": "/api/v1/models",
+    }
 
 model_service = ModelService()
 database = Database()
@@ -921,9 +944,9 @@ def risk_health():
 def risk_models():
     return ModelsResponse(
         models=[
-            ModelStatus(dataset="PaySim", model="xgb_realtime_model.json", available=True),
-            ModelStatus(dataset="BankSim", model="banksim_xgb_model.joblib", available=Path("reports/banksim_xgb_model.joblib").is_file()),
-            ModelStatus(dataset="IEEE-CIS", model="ieee_cis_xgb_model.joblib", available=Path("reports/ieee_cis_xgb_model.joblib").is_file()),
+            ModelStatus(dataset="PaySim", model="xgb_realtime_model.json", available=bool(model_service.is_loaded or (REPORTS_DIR / "xgb_realtime_model.json").is_file())),
+            ModelStatus(dataset="BankSim", model="banksim_xgb_model.joblib", available=(REPORTS_DIR / "banksim_xgb_model.joblib").is_file()),
+            ModelStatus(dataset="IEEE-CIS", model="ieee_cis_xgb_model.joblib", available=(REPORTS_DIR / "ieee_cis_xgb_model.joblib").is_file()),
             ModelStatus(dataset="AMLSim", model="signal-only", available=False),
             ModelStatus(dataset="Fraud Graph", model="signal-only", available=False),
         ]

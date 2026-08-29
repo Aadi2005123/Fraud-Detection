@@ -25,8 +25,14 @@ import {
   Zap,
 } from 'lucide-react'
 
-const BASE_API = 'http://localhost:8000'
-const RISK_API = 'http://localhost:8000/api/v1'
+const RENDER_BACKEND_URL = 'https://fraud-detection-1-ky1b.onrender.com'
+const LOCAL_BACKEND_URL = 'http://localhost:8000'
+
+const BASE_API =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? LOCAL_BACKEND_URL : RENDER_BACKEND_URL)
+const RISK_API = `${BASE_API}/api/v1`
 
 // ── Persistent device fingerprint ───────────────────────────────────────────
 const DEVICE_KEY = 'paysim_guard_device_id'
@@ -286,7 +292,7 @@ function humanizeError(rawMessage) {
   if (!rawMessage) return 'An unexpected error occurred. Please try again.'
   const msg = String(rawMessage)
   if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-    return 'Fraud Engine unavailable. Ensure backend service is running on port 8000.'
+    return 'Fraud Engine service is unreachable. Please ensure the backend is active.'
   }
   if (msg.includes('Sender account not found')) return 'Sender account could not be found.'
   if (msg.includes('Receiver account not found')) return 'Receiver account could not be found.'

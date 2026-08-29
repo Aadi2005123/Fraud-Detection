@@ -19,6 +19,20 @@ def reset_demo_state():
     database.reset_demo_state()
 
 
+def test_root():
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["service"] == "Fraud Detection API"
+    assert data["version"] == "2.0.0"
+
+
+def test_docs():
+    response = client.get("/docs")
+    assert response.status_code == 200
+
+
 def test_health():
     reset_demo_state()
     response = client.get("/health")
@@ -680,3 +694,351 @@ def test_duplicate_transaction_only_blocks_pending():
     second_res = client.post("/transactions/check", json=tx_payload)
     assert second_res.status_code == 200
     assert second_res.json()["transaction_id"] != tx_id
+
+
+# ── Phase 8 Explicit Verification Suite (Tests 1 - 14) ──────────────────────
+
+def test_phase8_test_1_normal_upi():
+    """TEST 1: Normal UPI transaction -> LOW / ALLOW"""
+    reset_demo_state()
+    res = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "receiver_id": "PRIYA001",
+            "amount": 2000,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "time": "12:00",
+            "device_id": "DEVICE_AMIT_01",
+            "location": "Delhi",
+            "failed_pin_attempts": 0,
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["risk_level"] == "LOW"
+    assert data["decision"] == "ALLOW"
+    assert 0.0 <= data["risk_score"] < 30.0
+
+
+def test_phase8_test_2_large_unusual_transaction():
+    """TEST 2: Large unusual transaction -> risk increases"""
+    reset_demo_state()
+    # Baseline normal
+    res_normal = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "receiver_id": "PRIYA001",
+            "amount": 2000,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "time": "12:00",
+            "device_id": "DEVICE_AMIT_01",
+            "location": "Delhi",
+        },
+    )
+    # Large unusual
+    res_large = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "receiver_id": "PRIYA001",
+            "amount": 90000,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "time": "12:00",
+            "device_id": "DEVICE_AMIT_01",
+            "location": "Delhi",
+        },
+    )
+    assert res_large.status_code == 200
+    assert res_large.json()["risk_score"] > res_normal.json()["risk_score"]
+    assert res_large.json()["risk_signals"]["unusually_large_transaction"] is True
+
+
+def test_phase8_test_3_new_device_plus_failed_pins():
+    """TEST 3: New device + failed PINs -> risk increases significantly"""
+    reset_demo_state()
+    res = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "receiver_id": "PRIYA001",
+            "amount": 10000,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "time": "12:00",
+            "device_id": "DEVICE_UNKNOWN_NEW_99",
+            "location": "Delhi",
+            "failed_pin_attempts": 3,
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["risk_signals"]["device_changed"] is True
+    assert data["risk_signals"]["multiple_failed_pin_attempts"] is True
+    assert data["risk_score"] >= 60.0
+    assert data["decision"] == "BLOCK"
+
+
+def test_phase8_test_4_impossible_travel():
+    """TEST 4: Impossible travel -> HIGH/CRITICAL and BLOCK"""
+    reset_demo_state()
+    # 1. Delhi txn
+    res1 = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "receiver_id": "PRIYA001",
+            "amount": 1000,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "location": "Delhi",
+            "time": "10:00",
+        },
+    )
+    tx1_id = res1.json()["transaction_id"]
+    client.post("/transactions/confirm", json={"transaction_id": tx1_id})
+
+    # 2. Mumbai txn immediately after
+    res2 = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "receiver_id": "PRIYA001",
+            "amount": 1000,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "location": "Mumbai",
+            "time": "10:05",
+        },
+    )
+    assert res2.status_code == 200
+    data = res2.json()
+    assert data["risk_signals"]["impossible_travel"] is True
+    assert data["risk_level"] in ("HIGH", "CRITICAL")
+    assert data["decision"] == "BLOCK"
+
+
+def test_phase8_test_5_atm_transaction_no_receiver():
+    """TEST 5: ATM transaction -> no receiver-account requirement"""
+    reset_demo_state()
+    res = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "amount": 5000,
+            "channel": "ATM",
+            "time": "12:00",
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["channel"] == "ATM"
+    assert data["transaction_type"] == "CASH_OUT"
+    assert data["receiver_id"] == "SYSTEM"
+
+
+def test_phase8_test_6_cash_deposit_transaction_type():
+    """TEST 6: Cash deposit -> correct transaction type (CASH_IN)"""
+    reset_demo_state()
+    res = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "amount": 5000,
+            "channel": "CASH_DEPOSIT",
+            "time": "12:00",
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["channel"] == "CASH_DEPOSIT"
+    assert data["transaction_type"] == "CASH_IN"
+
+
+def test_phase8_test_7_card_transaction_type():
+    """TEST 7: Card transaction -> correct transaction type (PAYMENT)"""
+    reset_demo_state()
+    res = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "amount": 2500,
+            "channel": "DEBIT_CARD",
+            "time": "12:00",
+            "merchant_id": "MERCH_AMAZON_01",
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["channel"] == "DEBIT_CARD"
+    assert data["transaction_type"] == "PAYMENT"
+
+
+def test_phase8_test_8_insufficient_balance():
+    """TEST 8: Insufficient balance -> 422/error, no transaction created"""
+    reset_demo_state()
+    res = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AADI001",  # balance = 10000
+            "receiver_id": "RAHUL001",
+            "amount": 50000,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "time": "12:00",
+        },
+    )
+    assert res.status_code == 422
+    assert "exceeds sender balance" in res.json()["detail"].lower()
+
+
+def test_phase8_test_9_duplicate_transaction_rejected():
+    """TEST 9: Duplicate transaction -> rejected"""
+    reset_demo_state()
+    payload = {
+        "sender_id": "AMIT001",
+        "receiver_id": "PRIYA001",
+        "amount": 3000,
+        "transaction_type": "TRANSFER",
+        "channel": "UPI",
+        "date": 25,
+        "month": "August",
+        "time": "14:30",
+    }
+    res1 = client.post("/transactions/check", json=payload)
+    assert res1.status_code == 200
+    res2 = client.post("/transactions/check", json=payload)
+    assert res2.status_code == 422
+    assert "duplicate" in res2.json()["detail"].lower()
+
+
+def test_phase8_test_10_blocked_transaction_confirmation():
+    """TEST 10: Blocked transaction confirmation -> cannot complete"""
+    reset_demo_state()
+    res = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AMIT001",
+            "receiver_id": "PRIYA001",
+            "amount": 100000,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "time": "03:00",
+            "failed_pin_attempts": 4,
+            "device_id": "DEVICE_UNKNOWN_NEW",
+        },
+    )
+    assert res.status_code == 200
+    tx_id = res.json()["transaction_id"]
+    assert res.json()["decision"] == "BLOCK"
+
+    confirm_res = client.post("/transactions/confirm", json={"transaction_id": tx_id})
+    assert confirm_res.status_code == 200
+    assert confirm_res.json()["status"] == "FLAGGED"
+    assert "blocked" in confirm_res.json()["message"].lower()
+
+
+def test_phase8_test_11_allowed_transaction_confirmation():
+    """TEST 11: Allowed transaction confirmation -> sender balance decreases, receiver balance increases"""
+    reset_demo_state()
+    sender_init = database.get_account("AADI001")["balance"]
+    receiver_init = database.get_account("RAHUL001")["balance"]
+    amt = 1500.0
+
+    res = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AADI001",
+            "receiver_id": "RAHUL001",
+            "amount": amt,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "time": "12:00",
+        },
+    )
+    assert res.status_code == 200
+    tx_id = res.json()["transaction_id"]
+
+    confirm_res = client.post("/transactions/confirm", json={"transaction_id": tx_id})
+    assert confirm_res.status_code == 200
+    assert confirm_res.json()["status"] == "COMPLETED"
+
+    assert database.get_account("AADI001")["balance"] == sender_init - amt
+    assert database.get_account("RAHUL001")["balance"] == receiver_init + amt
+
+
+def test_phase8_test_12_double_confirmation():
+    """TEST 12: Double confirmation -> does not debit twice"""
+    reset_demo_state()
+    sender_init = database.get_account("AADI001")["balance"]
+    receiver_init = database.get_account("RAHUL001")["balance"]
+    amt = 1000.0
+
+    res = client.post(
+        "/transactions/check",
+        json={
+            "sender_id": "AADI001",
+            "receiver_id": "RAHUL001",
+            "amount": amt,
+            "transaction_type": "TRANSFER",
+            "channel": "UPI",
+            "time": "12:00",
+        },
+    )
+    tx_id = res.json()["transaction_id"]
+
+    # First confirm
+    c1 = client.post("/transactions/confirm", json={"transaction_id": tx_id})
+    assert c1.status_code == 200
+    assert c1.json()["status"] == "COMPLETED"
+    bal_after_first = database.get_account("AADI001")["balance"]
+    assert bal_after_first == sender_init - amt
+
+    # Second confirm (must be idempotent, not debit again)
+    c2 = client.post("/transactions/confirm", json={"transaction_id": tx_id})
+    assert c2.status_code == 200
+    assert c2.json()["status"] == "COMPLETED"
+    assert "already completed" in c2.json()["message"].lower()
+    assert database.get_account("AADI001")["balance"] == bal_after_first
+
+
+def test_phase8_test_13_missing_mongodb_handled_gracefully():
+    """TEST 13: Missing MongoDB -> application handles failure gracefully"""
+    # Create isolated database instance with invalid mongo URI
+    db = Database()
+    db._client = None
+    assert db.available is False
+    accounts = db.list_accounts()
+    assert len(accounts) >= 4
+    stats = db.stats()
+    assert "total_transactions" in stats
+
+
+def test_phase8_test_14_missing_ml_model_non_crashing():
+    """TEST 14: Missing ML model -> backend does not crash"""
+    from backend.model_service import ModelService
+    from backend.schemas import PredictionRequest
+    
+    # Instantiate with non-existent path
+    service = ModelService(model_path="non_existent_path.json")
+    assert service.is_loaded is False
+    assert service.model is None
+    
+    # Predict must succeed via fallback
+    pred = service.predict(
+        PredictionRequest(
+            amount=5000.0,
+            oldbalanceOrg=10000.0,
+            oldbalanceDest=5000.0,
+            type="TRANSFER",
+            hour=12,
+            day=10,
+        )
+    )
+    assert "fraud_probability" in pred
+    assert pred["risk_level"] in ("LOW", "MEDIUM", "HIGH", "CRITICAL")
+    assert pred["decision"] in ("ALLOW", "REVIEW", "BLOCK")
