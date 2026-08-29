@@ -1,0 +1,67 @@
+{
+  "dataset": "BankSim",
+  "transaction_rows": 594643,
+  "fraud_count": 7200,
+  "fraud_rate": 0.012108105199254007,
+  "train_rows": 461412,
+  "test_rows": 133231,
+  "split_cutoff_step": 143,
+  "features": [
+    "step",
+    "age",
+    "amount",
+    "zipcodeOri",
+    "zipMerchant",
+    "customer_prior_tx_count",
+    "merchant_prior_tx_count",
+    "customer_merchant_prior_tx_count",
+    "merchant_prior_customer_count",
+    "customer_prior_merchant_count",
+    "customer_prior_amount_mean",
+    "merchant_prior_amount_mean",
+    "gender_E",
+    "gender_F",
+    "gender_M",
+    "gender_U",
+    "category_es_barsandrestaurants",
+    "category_es_contents",
+    "category_es_fashion",
+    "category_es_food",
+    "category_es_health",
+    "category_es_home",
+    "category_es_hotelservices",
+    "category_es_hyper",
+    "category_es_leisure",
+    "category_es_otherservices",
+    "category_es_sportsandtoys",
+    "category_es_tech",
+    "category_es_transportation",
+    "category_es_travel",
+    "category_es_wellnessandbeauty"
+  ],
+  "graph_relationship": "customer -> merchant; edge Weight=amount and typeTrans=category",
+  "false_positive_cost_assumption_inr": 75.0,
+  "metrics": {
+    "threshold": 0.5,
+    "precision": 0.6582155046318869,
+    "recall": 0.9375,
+    "f1": 0.7734173589229447,
+    "pr_auc": 0.9268436208404981,
+    "confusion_matrix": [
+      [
+        131090,
+        701
+      ],
+      [
+        90,
+        1350
+      ]
+    ],
+    "false_positive_count": 701,
+    "false_positive_cost": 52575.0,
+    "false_negative_count": 90,
+    "false_negative_amount_lost": 546562.8,
+    "true_negative_count": 131090,
+    "true_positive_count": 1350
+  }
+}

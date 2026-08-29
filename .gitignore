@@ -1,0 +1,16 @@
+data/*.csv
+data/*.zip
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.venv/
+node_modules/
+frontend/dist/
+
+# Large datasets
+data/paysim.csv
+data/ieee-cis-fraud/train_transaction.csv
+
+# Virtual environment
+.venv/

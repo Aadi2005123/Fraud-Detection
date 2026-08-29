@@ -1,0 +1,18 @@
+{
+  "source": "data/gen-fraud-graph-main/gen-fraud-graph-main",
+  "scale_factor": 0.001,
+  "num_accounts": 10000,
+  "num_transactions": 90000,
+  "num_fraud_rings": 50,
+  "fraud_ring_depth_range": [
+    4,
+    7
+  ],
+  "embedding_provider": "fake",
+  "embedding_dim": 8,
+  "workers": 1,
+  "batches_per_worker": 1,
+  "output_format": "csv",
+  "hardness": "medium",
+  "random_seed": 20260824
+}

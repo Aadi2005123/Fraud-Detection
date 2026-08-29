@@ -1,0 +1,12 @@
+{
+  "source_parameter_directory": "data/amlsim-master/AMLSim-master/paramFiles/1K",
+  "random_seed": 20260824,
+  "base_date": "2017-01-01T00:00:00Z",
+  "total_steps": 720,
+  "account_count": 1000,
+  "bank_count": 5,
+  "normal_transaction_count": 200000,
+  "typology_count": 150,
+  "accounts_per_typology": 10,
+  "output_directory": "data/amlsim_generated/output"
+}

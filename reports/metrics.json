@@ -1,0 +1,88 @@
+{
+  "data": {
+    "total_rows_filtered": 2770409,
+    "overall_fraud_rate": 0.002964544224336551,
+    "train_rows": 2719123,
+    "test_rows": 51286,
+    "train_fraud_rate": 0.002412174807833261,
+    "test_fraud_rate": 0.03225051671021331,
+    "split_cutoff_step": 594
+  },
+  "baseline_isFlaggedFraud": {
+    "precision": 1.0,
+    "recall": 0.0048367593712212815,
+    "n_flagged": 8
+  },
+  "logistic_regression": {
+    "pr_auc": 0.9571982697259176
+  },
+  "xgboost_realtime_honest": {
+    "note": "Only pre-transaction features (amount, oldbalanceOrg, oldbalanceDest, ratio, hour, day, type). No post-transaction balances or fields derived from them.",
+    "pr_auc": 0.9958697469022595,
+    "metrics_at_0.5": {
+      "threshold": 0.5,
+      "precision": 0.9521889400921659,
+      "recall": 0.9993954050785974,
+      "f1": 0.9752212389380531,
+      "n_flagged": 1736
+    }
+  },
+  "xgboost": {
+    "pr_auc": 1.0,
+    "scale_pos_weight": 413.5636529958835,
+    "metrics_at_0.5": {
+      "threshold": 0.5,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "n_flagged": 1654
+    }
+  },
+  "xgboost_realtime_cost_optimal": {
+    "note": "Cost sweep, confusion matrix, spike detection and SHAP all use the real-time model, since a cost-optimal threshold is only meaningful for a model you could actually deploy.",
+    "cost_optimal_threshold": 0.05,
+    "cost_optimal_n_fp": 83,
+    "cost_optimal_n_fn": 1,
+    "cost_optimal_total_cost_inr": 405270.08,
+    "cost_optimal_metrics": {
+      "threshold": 0.05,
+      "precision": 0.9521889400921659,
+      "recall": 0.9993954050785974,
+      "f1": 0.9752212389380531,
+      "n_flagged": 1736
+    }
+  },
+  "spike_detection": {
+    "n_spike_alerts_test_window_only": 0,
+    "n_hours_in_test": 149,
+    "n_spike_alerts_full_timeline_demo": 3,
+    "n_hours_full_timeline": 743,
+    "note": "Test window sits entirely inside the volume-collapse tail, so its own rolling baseline is already saturated -- no additional spike to flag within that window alone. Full-timeline figure demonstrates the alerting mechanism firing at the actual regime shift."
+  },
+  "top_shap_features": [
+    {
+      "feature": "amountToBalanceRatio_pre",
+      "mean_abs_shap": 8.349069595336914
+    },
+    {
+      "feature": "oldbalanceDest",
+      "mean_abs_shap": 1.5155242681503296
+    },
+    {
+      "feature": "amount",
+      "mean_abs_shap": 1.1119064092636108
+    },
+    {
+      "feature": "dayNumber",
+      "mean_abs_shap": 1.01664137840271
+    },
+    {
+      "feature": "hourOfDay",
+      "mean_abs_shap": 0.7219737768173218
+    }
+  ],
+  "cost_assumptions": {
+    "cost_per_false_positive_inr": 75.0,
+    "cost_per_false_negative": "actual per-transaction fraud amount (not flat)"
+  }
+}
