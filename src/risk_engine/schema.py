@@ -50,6 +50,12 @@ class RiskEvent:
     signal_contributions: list = field(default_factory=list)
     policy_version: Optional[str] = None
     event_id: Optional[str] = None
+    channel: Optional[str] = None
+    timestamp_ist: Optional[str] = None
+    timestamp_utc: Optional[str] = None
+    top_signal: Optional[str] = None
+    reasons: list = field(default_factory=list)
+    processing_time_ms: Optional[float] = None
 
     def to_dict(self):
         return asdict(self)

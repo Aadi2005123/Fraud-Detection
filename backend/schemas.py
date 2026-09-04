@@ -131,6 +131,7 @@ class TransactionCheckResponse(BaseModel):
 
     # Rich explainability
     model: str = "PaySim XGBoost"
+    top_signal: str = "Baseline Activity"
     risk_signals: dict[str, bool] = Field(default_factory=dict)
     detected_signals: list[DetectedSignalItem] = Field(default_factory=list)
     reasons: list[str] = Field(default_factory=list)

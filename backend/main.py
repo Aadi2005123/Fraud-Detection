@@ -537,6 +537,37 @@ def transaction_check(request: TransactionCheckRequest):
     if not reasons:
         reasons.append("Transaction matches normal behavioral baseline across all signals")
 
+    # Determine the single most significant risk signal
+    top_signal = "Baseline Activity (Normal)"
+    if impossible_travel:
+        top_signal = "Impossible Travel Velocity"
+    elif wrong_pin_count >= 3:
+        top_signal = f"Multiple Auth Failures ({wrong_pin_count} failed PINs)"
+    elif device_changed:
+        top_signal = "New / Unrecognized Device"
+    elif unusually_large:
+        top_signal = "High Transaction Amount Anomaly"
+    elif balance_drain:
+        top_signal = "Sudden Account Balance Drain"
+    elif unusual_location:
+        top_signal = f"Unusual Location ({derived_location})"
+    elif inactive_account:
+        top_signal = "Dormant Account Reactivation"
+    elif unusual_time:
+        top_signal = f"Unusual Hour ({hour:02d}:00 IST)"
+    elif new_beneficiary:
+        top_signal = "New Beneficiary Relationship"
+    elif high_velocity:
+        top_signal = "High Transaction Velocity"
+    elif is_atm_anomaly:
+        top_signal = "ATM High-Value Anomaly"
+    elif is_card_anomaly:
+        top_signal = "Card Location / Value Anomaly"
+    elif is_cash_deposit_anomaly:
+        top_signal = "Cash Deposit Anomaly"
+    elif wrong_pin_count > 0:
+        top_signal = f"Auth Anomaly ({wrong_pin_count} failed PIN)"
+
     generated_id = uuid4().hex
     t_end = pytime.perf_counter()
     processing_ms = round((t_end - t_start) * 1000.0, 2)
@@ -567,6 +598,7 @@ def transaction_check(request: TransactionCheckRequest):
             "failed_pin_attempts": wrong_pin_count,
             "risk_signals": risk_signals,
             "risk_reasons": reasons,
+            "top_signal": top_signal,
         }
     )
 
@@ -597,7 +629,7 @@ def transaction_check(request: TransactionCheckRequest):
     try:
         row_data = {
             "transaction_id": generated_id,
-            "amount": request.amount,
+            "amount": float(request.amount),
             "type": request.transaction_type,
             "channel": channel,
             "nameOrig": request.sender_id,
@@ -606,21 +638,30 @@ def transaction_check(request: TransactionCheckRequest):
             "oldbalanceDest": receiver_balance,
             "timestamp": ts_bundle["timestamp_utc"],
         }
-        engine_event = ADAPTERS["paysim"].adapt(row_data, {"fraud_probability": combined_score, "model_used": "paysim-xgb-realtime"})
+        engine_event = ADAPTERS["paysim"].adapt(row_data, {"fraud_probability": combined_score, "model_used": "PaySim XGBoost (Realtime)"})
+        engine_event.transaction_id = generated_id
+        engine_event.event_id = generated_id
+        engine_event.amount = float(request.amount)
+        engine_event.channel = channel
+        engine_event.timestamp_ist = ts_bundle["timestamp_ist"]
+        engine_event.timestamp_utc = ts_bundle["timestamp_utc"]
         engine_event.risk_score = risk_score_100
         engine_event.risk_level = risk_level
         engine_event.decision = decision
+        engine_event.top_signal = top_signal
+        engine_event.reasons = reasons
+        engine_event.processing_time_ms = processing_ms
         risk_engine.assess(engine_event)
     except Exception:
         pass
 
     status_value = "FLAGGED" if decision == "BLOCK" else "REVIEW" if decision == "REVIEW" else "ALLOWED"
     if decision == "BLOCK":
-        message = "High risk security anomaly detected. Transaction blocked by Fraud Engine."
+        message = "High risk security anomaly detected. Transaction recommended for BLOCK by Risk Policy."
     elif decision == "REVIEW":
-        message = "Medium risk detected. Transaction flagged for security review."
+        message = "Medium risk detected. Transaction recommended for security review."
     else:
-        message = "Security risk evaluated. Transaction allowed and ready for confirmation."
+        message = "Security risk evaluated. Transaction recommended for ALLOW."
 
     return TransactionCheckResponse(
         transaction_id=str(transaction_id),
@@ -654,6 +695,7 @@ def transaction_check(request: TransactionCheckRequest):
         requires_confirmation=decision == "ALLOW",
         message=message,
         model="PaySim XGBoost + Behavioral Engine",
+        top_signal=top_signal,
         risk_signals=risk_signals,
         detected_signals=detected_signals,
         reasons=reasons,
@@ -696,7 +738,7 @@ def transaction_confirm(request: TransactionConfirmRequest):
             transaction_id=request.transaction_id,
             channel=rec_channel,
             status="FLAGGED",
-            message="Transaction was blocked by the risk engine and cannot be completed.",
+            message="Simulated transaction was flagged for BLOCK by the risk engine decision policy.",
         )
     if record.get("status") == "COMPLETED":
         return TransactionConfirmResponse(
@@ -920,21 +962,32 @@ def risk_audit(limit: int = Query(default=50, ge=1, le=500)):
 def risk_metrics():
     records = risk_engine.get_audit_trail()
     total = len(records)
-    high_count = sum(r["risk_level"] in ("HIGH", "CRITICAL") for r in records)
-    crit_count = sum(r["risk_level"] == "CRITICAL" for r in records)
-    med_count = sum(r["risk_level"] == "MEDIUM" for r in records)
-    low_count = sum(r["risk_level"] == "LOW" for r in records)
-    flagged_count = sum(r["decision"] in ("FLAG", "BLOCK") for r in records)
-    scores = [float(r.get("risk_score", 0)) for r in records]
+    allowed_count = sum(r.get("decision") == "ALLOW" for r in records)
+    review_count = sum(r.get("decision") == "REVIEW" for r in records)
+    blocked_count = sum(r.get("decision") in ("FLAG", "BLOCK") for r in records)
+    crit_count = sum(r.get("risk_level") == "CRITICAL" for r in records)
+    high_count = sum(r.get("risk_level") in ("HIGH", "CRITICAL") for r in records)
+    med_count = sum(r.get("risk_level") == "MEDIUM" for r in records)
+    low_count = sum(r.get("risk_level") == "LOW" for r in records)
+    total_vol = sum(float(r.get("amount", 0) or 0) for r in records)
+    blocked_vol = sum(float(r.get("amount", 0) or 0) for r in records if r.get("decision") in ("FLAG", "BLOCK"))
+    scores = [float(r.get("risk_score", 0) or 0) for r in records]
     avg_score = round(sum(scores) / len(scores), 1) if scores else 0.0
 
     return {
         "transactions_analyzed": total,
+        "allowed_transactions": allowed_count,
+        "review_transactions": review_count,
+        "blocked_transactions": blocked_count,
         "critical_risk": crit_count,
         "high_risk": high_count,
         "medium_risk": med_count,
         "low_risk": low_count,
-        "flagged_rate": (flagged_count / total) if total else 0.0,
+        "flagged_rate": (blocked_count / total) if total else 0.0,
+        "fraud_rate": (blocked_count / total) if total else 0.0,
+        "total_volume": round(total_vol, 2),
+        "blocked_volume": round(blocked_vol, 2),
+        "potential_loss_prevented": round(blocked_vol, 2),
         "avg_risk_score": avg_score,
         "estimated_fp_cost": 0,
         "estimated_fn_cost": 0,

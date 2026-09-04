@@ -29,30 +29,41 @@ class RiskEngine:
         score = (sum(value for _, value in weighted) / total_weight * 100.0) if total_weight else 0.0
         event.signals = signals
         event.signal_contributions = [{"source": signal.source, "signal_name": signal.signal_name, "category": signal.category, "weight": self.WEIGHTS.get(signal.category, self.WEIGHTS["behavioral"]), "risk_value": signal.risk_value, "confidence": signal.confidence, "contribution": value / total_weight * 100.0 if total_weight else 0.0, "reason": signal.reason, "evidence": deepcopy(signal.evidence)} for signal, value in weighted]
-        event.risk_score = round(score, 2)
-        normalized = score / 100.0
+        # Only compute naive score/decision if not already canonically evaluated (e.g. by /transactions/check)
+        if event.risk_score is None:
+            event.risk_score = round(score, 2)
+            normalized = score / 100.0
 
-        if normalized >= self.critical_threshold:
-            event.risk_level = "CRITICAL"
-            event.decision = "BLOCK"
-        elif normalized >= self.high_threshold:
-            event.risk_level = "HIGH"
-            event.decision = "BLOCK"
-        elif normalized >= self.medium_threshold:
-            event.risk_level = "MEDIUM"
-            event.decision = "REVIEW"
-        else:
-            event.risk_level = "LOW"
-            event.decision = "ALLOW"
+            if normalized >= self.critical_threshold:
+                event.risk_level = "CRITICAL"
+                event.decision = "BLOCK"
+            elif normalized >= self.high_threshold:
+                event.risk_level = "HIGH"
+                event.decision = "BLOCK"
+            elif normalized >= self.medium_threshold:
+                event.risk_level = "MEDIUM"
+                event.decision = "REVIEW"
+            else:
+                event.risk_level = "LOW"
+                event.decision = "ALLOW"
 
-        event.explanation = explain(event)
+        if not event.explanation:
+            event.explanation = explain(event)
         audit_time = datetime.now(timezone.utc).isoformat()
         audit = {
             "event_id": event.event_id,
+            "transaction_id": event.transaction_id or event.event_id,
             "audit_timestamp": audit_time,
             "dataset": event.dataset,
             "timestamp": event.timestamp,
-            "model_names": [signal.model_name for signal in signals if signal.model_name],
+            "timestamp_ist": getattr(event, "timestamp_ist", None),
+            "timestamp_utc": getattr(event, "timestamp_utc", None),
+            "amount": float(event.amount) if event.amount is not None else 0.0,
+            "sender": event.sender_id,
+            "receiver": event.receiver_id,
+            "channel": getattr(event, "channel", "UPI") or "UPI",
+            "transaction_type": event.transaction_type or "TRANSFER",
+            "model_names": [signal.model_name for signal in signals if signal.model_name] or [event.model_used or "PaySim XGBoost (Realtime)"],
             "model_probabilities": {signal.model_name: signal.risk_value for signal in signals if signal.model_name},
             "input_signals": deepcopy(event.input_signals),
             "individual_signals": [signal.__dict__.copy() for signal in signals],
@@ -61,8 +72,11 @@ class RiskEngine:
             "risk_score": event.risk_score,
             "risk_level": event.risk_level,
             "decision": event.decision,
+            "top_signal": getattr(event, "top_signal", None) or "Baseline Activity",
+            "reasons": getattr(event, "reasons", []),
             "explanation": event.explanation,
             "policy_version": event.policy_version,
+            "processing_time_ms": getattr(event, "processing_time_ms", None),
         }
         self.audit_trail.append(audit)
         return event
