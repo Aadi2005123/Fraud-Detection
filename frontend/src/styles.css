@@ -1491,4 +1491,468 @@ tbody tr:hover {
   .form-grid-2 {
     grid-template-columns: 1fr;
   }
-}
+}
+
+/* ── Hero Flow Strip ───────────────────────────────────────────────────────── */
+.hero-flow-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+}
+
+.hero-flow-strip span {
+  background: rgba(184, 227, 107, 0.1);
+  border: 1px solid rgba(184, 227, 107, 0.25);
+  color: var(--lime);
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.hero-flow-strip svg {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* ── Active Model Card (Overview) ─────────────────────────────────────────── */
+.active-model-card {
+  background: rgba(184, 227, 107, 0.05);
+  border: 1px solid rgba(184, 227, 107, 0.18);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 20px;
+}
+
+.active-model-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.active-model-name {
+  font-size: 14px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.active-model-badge {
+  background: rgba(184, 227, 107, 0.15);
+  color: var(--lime);
+  font-size: 9px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(184, 227, 107, 0.3);
+}
+
+.active-model-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.active-model-metrics > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.active-model-metrics span {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.active-model-metrics strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.active-model-desc {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── Engine Eval Section ──────────────────────────────────────────────────── */
+.engine-eval-section {
+  background: rgba(21, 27, 37, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 14px 0;
+}
+
+.eval-note {
+  margin: 10px 0 0;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* ── Panel Description ────────────────────────────────────────────────────── */
+.panel-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+/* ── Model Trust Section ──────────────────────────────────────────────────── */
+.model-trust-section {
+  border-color: rgba(242, 189, 104, 0.25) !important;
+  background: rgba(242, 189, 104, 0.03) !important;
+}
+
+.trust-badge {
+  background: rgba(242, 189, 104, 0.12);
+  color: var(--amber);
+  border: 1px solid rgba(242, 189, 104, 0.3);
+  font-size: 9px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+/* ── Leakage Story Grid ───────────────────────────────────────────────────── */
+.leakage-story-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+  gap: 0;
+  align-items: start;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .leakage-story-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .leakage-connector {
+    display: none;
+  }
+}
+
+.leakage-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 8px 0;
+  font-size: 20px;
+  color: var(--muted);
+}
+
+.leakage-step {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(21, 27, 37, 0.4);
+}
+
+.leakage-step.initial {
+  border-color: rgba(255, 112, 112, 0.25);
+  background: rgba(255, 112, 112, 0.04);
+}
+
+.leakage-step.investigation {
+  border-color: rgba(242, 189, 104, 0.25);
+  background: rgba(242, 189, 104, 0.04);
+}
+
+.leakage-step.action {
+  border-color: rgba(100, 180, 255, 0.2);
+  background: rgba(100, 180, 255, 0.04);
+}
+
+.leakage-step.final {
+  border-color: rgba(184, 227, 107, 0.3);
+  background: rgba(184, 227, 107, 0.05);
+}
+
+.leakage-step-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--line-focus);
+  flex-shrink: 0;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.leakage-step p {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 6px 0 0;
+  line-height: 1.55;
+}
+
+.leakage-metric {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 6px 0;
+}
+
+.leakage-metric code {
+  font-size: 13px;
+  background: rgba(255, 112, 112, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.leakage-message {
+  text-align: center;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--lime);
+  padding: 16px 20px;
+  background: rgba(184, 227, 107, 0.06);
+  border: 1px solid rgba(184, 227, 107, 0.18);
+  border-radius: 8px;
+  letter-spacing: 0.2px;
+}
+
+/* ── Primary Model Metrics Grid ───────────────────────────────────────────── */
+.primary-badge {
+  background: rgba(184, 227, 107, 0.15);
+  color: var(--lime);
+  border: 1px solid rgba(184, 227, 107, 0.3);
+  font-size: 9px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 1.2px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.primary-model-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.primary-metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(21, 27, 37, 0.5);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.primary-metric-card span {
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.primary-metric-card strong {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.primary-metric-card small {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* ── SHAP Features Bar Chart ─────────────────────────────────────────────── */
+.model-features-note {
+  background: rgba(21, 27, 37, 0.5);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.shap-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shap-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+}
+
+.shap-row code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  color: var(--lime);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shap-bar-wrap {
+  background: var(--line);
+  height: 6px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.shap-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--lime), rgba(184, 227, 107, 0.5));
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.shap-row span {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+/* ── Offline Benchmark Badge ─────────────────────────────────────────────── */
+.offline-badge {
+  background: rgba(135, 147, 165, 0.12);
+  color: var(--muted);
+  border: 1px solid rgba(135, 147, 165, 0.25);
+  font-size: 9px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.benchmark-secondary {
+  opacity: 0.85;
+  border-color: var(--line) !important;
+}
+
+/* ── Roadmap Section ──────────────────────────────────────────────────────── */
+.roadmap-badge {
+  background: rgba(135, 147, 165, 0.1);
+  color: var(--muted);
+  border: 1px solid rgba(135, 147, 165, 0.2);
+  font-size: 9px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .roadmap-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.roadmap-card {
+  background: rgba(21, 27, 37, 0.5);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 18px;
+  opacity: 0.8;
+}
+
+.roadmap-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+
+.roadmap-card-header b {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.roadmap-tag {
+  background: rgba(135, 147, 165, 0.1);
+  color: var(--muted);
+  font-size: 8px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.8px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(135, 147, 165, 0.2);
+}
+
+.roadmap-card ul {
+  margin: 0 0 10px 0;
+  padding-left: 16px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.roadmap-card p {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Simulator Key Metrics Grid */
+.sim-key-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: rgba(10, 15, 25, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 14px 0;
+}
+
+.sim-key-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sim-key-metric span {
+  font-size: 9px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.sim-key-metric strong {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.sim-key-metric.full-width {
+  grid-column: 1 / -1;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 6px;
+  margin-top: 2px;
+}

@@ -23,6 +23,7 @@ import {
   TrendingUp,
   XCircle,
   Zap,
+  AlertCircle,
 } from 'lucide-react'
 
 const RENDER_BACKEND_URL = 'https://fraud-detection-0w6x.onrender.com'
@@ -162,14 +163,12 @@ const CHANNEL_CONFIG = {
   },
 }
 
-// ── Pages ────────────────────────────────────────────────────────────────────
+// ── Pages — Network Graph & AML Monitor removed from primary nav (not backed by real-time computation) ─
 const pages = [
   ['overview', 'Overview', BarChart3],
   ['simulator', 'Risk Engine Simulator', Play],
   ['feed', 'Live Feed', Activity],
-  ['network', 'Network Graph', Network],
-  ['aml', 'AML Monitor', Shield],
-  ['performance', 'Engine & Models', Layers],
+  ['performance', 'Engine \u0026 Models', Layers],
   ['audit', 'Audit Log', CircleDot],
 ]
 
@@ -544,8 +543,8 @@ export default function App() {
           ))}
         </nav>
         <div className="sidebar-foot">
-          <span>REAL-TIME FRAUD SHIELD</span>
-          <small>Enriched multi-channel telemetry &amp; unified risk scoring.</small>
+          <span>RAZORPAY AI BUILDATHON</span>
+          <small>Track 02: AI Risk Manager · PaySim XGBoost · PR-AUC 0.996</small>
         </div>
       </aside>
 
@@ -599,32 +598,6 @@ export default function App() {
         {page === 'feed' && <Feed audit={audit} onSelect={setDetail} onRefresh={refresh} />}
         {page === 'audit' && <Feed audit={audit} onSelect={setDetail} onRefresh={refresh} detailed />}
         {page === 'performance' && <Performance metrics={metrics} />}
-        {page === 'network' && (
-          <SignalPage
-            title="Payment Network Graph"
-            eyebrow="GRAPH RISK TOPOLOGY"
-            copy="Transaction-time topological graph insights and structural collusion indicators."
-            items={[
-              'Network Degree & Clustering Coefficient',
-              'Suspicious Intermediary Mule Connections',
-              'Cyclic Fund Flow Detection',
-              'High-Risk Merchant Hub Concentration',
-            ]}
-          />
-        )}
-        {page === 'aml' && (
-          <SignalPage
-            title="AML Risk Monitor"
-            eyebrow="ANTI-MONEY LAUNDERING"
-            copy="Structured AML indicators, fan-in/fan-out velocity patterns, and threshold monitoring."
-            items={[
-              'Fan-in Layering Risk (Rapid consolidation)',
-              'Fan-out Smurfing Risk (Rapid dispersal)',
-              'Dormant Account Reactivation Spike',
-              'Cross-Border Velocity Surges',
-            ]}
-          />
-        )}
       </main>
 
       {detail && page !== 'simulator' && <Detail item={detail} onClose={() => setDetail(null)} />}
@@ -645,15 +618,28 @@ function Overview({ metrics, audit, models, onSelect, onSimulate }) {
     <>
       <section className="hero">
         <div>
-          <span className="kicker">REAL-TIME RISK ENGINE</span>
+          <span className="kicker">RAZORPAY AI BUILDATHON — TRACK 02: AI RISK MANAGER</span>
           <h2>
-            Continuous Payment Defense &amp;
+            Real-Time Payment Risk &amp;
             <br />
-            <em>Contextual Security</em>
+            <em>Fraud Defense</em>
           </h2>
           <p>
-            Autonomous channel-aware fraud engine combining PaySim XGBoost with real-time behavioral enrichment, device velocity, and impossible travel detection.
+            PaySim Guard evaluates every transaction <strong>before completion</strong> — scoring fraud risk using an XGBoost model trained on PaySim data, combined with contextual risk signals (device identity check, location &amp; travel velocity, auth failure history, balance drain, new beneficiary, dormancy, and circadian hours). Every decision is explainable and auditable.
           </p>
+          <div className="hero-flow-strip">
+            <span>Payment</span>
+            <ArrowRight size={12} />
+            <span>Transaction Data</span>
+            <ArrowRight size={12} />
+            <span>Pre-transaction Features</span>
+            <ArrowRight size={12} />
+            <span>XGBoost Risk Score</span>
+            <ArrowRight size={12} />
+            <span>Risk Decision</span>
+            <ArrowRight size={12} />
+            <span>Audit Trail</span>
+          </div>
           <button className="primary" style={{ width: 'auto', marginTop: 18 }} onClick={onSimulate}>
             <Play size={16} /> Open Risk Engine Simulator
           </button>
@@ -662,17 +648,17 @@ function Overview({ metrics, audit, models, onSelect, onSimulate }) {
           <strong>
             {metrics.fraud_rate ? `${(metrics.fraud_rate * 100).toFixed(1)}%` : metrics.flagged_rate ? `${(metrics.flagged_rate * 100).toFixed(1)}%` : '0.0%'}
           </strong>
-          <span>FRAUD RATE</span>
+          <span>FLAGGED RATE</span>
         </div>
       </section>
 
-      {/* Financial & Operational KPIs */}
+      {/* KPIs */}
       <section className="stats stats-5">
-        <Stat label="Transactions Analyzed" value={analyzed.toLocaleString()} subtext="All active channels" />
-        <Stat label="Allowed" value={allowed.toLocaleString()} tone="green" subtext="Passed low risk" />
+        <Stat label="Transactions Analyzed" value={analyzed.toLocaleString()} subtext="This session" />
+        <Stat label="Allowed" value={allowed.toLocaleString()} tone="green" subtext="Low risk — passed" />
         <Stat label="Under Review" value={review.toLocaleString()} tone="amber" subtext="Medium risk / 2FA" />
-        <Stat label="Blocked" value={blocked.toLocaleString()} tone="red" subtext="High & Critical risk" />
-        <Stat label="Loss Prevented" value={formatCurrency(blockedVol)} tone="lime" subtext="Protected merchant funds" />
+        <Stat label="Blocked" value={blocked.toLocaleString()} tone="red" subtext="High &amp; Critical risk" />
+        <Stat label="Volume Protected" value={formatCurrency(blockedVol)} tone="lime" subtext="Estimated blocked value" />
       </section>
 
       <section className="grid-two">
@@ -689,8 +675,8 @@ function Overview({ metrics, audit, models, onSelect, onSimulate }) {
         <div className="panel">
           <div className="panel-head">
             <div>
-              <span className="kicker">RISK DISTRIBUTION &amp; MODELS</span>
-              <h3>Engine Readiness</h3>
+              <span className="kicker">ENGINE STATUS</span>
+              <h3>Active Model &amp; Risk Layer</h3>
             </div>
           </div>
           <div className="risk-dist-box">
@@ -719,15 +705,19 @@ function Overview({ metrics, audit, models, onSelect, onSimulate }) {
             </div>
           </div>
 
-          <div style={{ marginTop: 24 }}>
-            <span className="kicker">AVAILABLE ADAPTERS</span>
-            {models.map((model) => (
-              <div className="source-row" key={model.dataset}>
-                <span className={`source-dot ${model.available ? '' : 'signal'}`} />
-                <span><b>{model.dataset}</b> <small className="muted">({model.model_type || 'Rule/Graph'})</small></span>
-                <small className="source-status-tag">{model.available ? 'PRIMARY ML' : 'SIGNAL ADAPTER'}</small>
-              </div>
-            ))}
+          <div className="active-model-card">
+            <div className="active-model-header">
+              <div className="engine-status-dot" />
+              <span className="active-model-name">PaySim XGBoost</span>
+              <span className="active-model-badge">PRIMARY · LIVE</span>
+            </div>
+            <div className="active-model-metrics">
+              <div><span>PR-AUC</span><strong className="lime">0.996</strong></div>
+              <div><span>Precision</span><strong>0.952</strong></div>
+              <div><span>Recall</span><strong>0.999</strong></div>
+              <div><span>Context</span><strong>8 signals</strong></div>
+            </div>
+            <p className="active-model-desc">Trained on PaySim dataset · Pre-transaction features only · No data leakage</p>
           </div>
         </div>
       </section>
@@ -804,7 +794,12 @@ function Feed({ audit, onSelect, onRefresh, detailed }) {
       <div className="panel-head">
         <div>
           <span className="kicker">{detailed ? 'SECURITY AUDIT LOG' : 'REAL-TIME TRANSACTION STREAM'}</span>
-          <h3>{detailed ? 'Immutable Decision Audit' : 'Live Risk Feed'}</h3>
+          <h3>{detailed ? 'Decision Audit Log' : 'Live Risk Feed'}</h3>
+          {detailed && (
+            <p style={{ color: 'var(--muted)', fontSize: 12, margin: '4px 0 0' }}>
+              Every risk decision is recorded with model output, risk signals, and final decision for review.
+            </p>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <div className="search-box">
@@ -925,9 +920,9 @@ function Simulator({
           <div className="engine-status-dot" />
           <span className="engine-status-label">Engine: <strong>PaySim Guard v2.4</strong></span>
           <span className="engine-status-sep">·</span>
-          <span className="engine-status-label">Model: <strong>XGBoost Ready</strong></span>
+          <span className="engine-status-label">Model: <strong>XGBoost (PR-AUC 0.996)</strong></span>
           <span className="engine-status-sep">·</span>
-          <span className="engine-status-label">Timezone: <strong>IST (Asia/Kolkata)</strong></span>
+          <span className="engine-status-label">Dataset: <strong>PaySim</strong></span>
         </div>
 
         {/* Merchant Transaction Form */}
@@ -1130,36 +1125,40 @@ function Simulator({
         )}
       </div>
 
-      {/* Right Column: Decision Pipeline & Risk Assessment Result */}
+      {/* Right Column: Decision Pipeline */}
       <div className="panel pipeline">
-        <span className="kicker">EVALUATION PIPELINE &amp; EXPLAINABILITY</span>
+        <span className="kicker">EVALUATION PIPELINE — PRE-TRANSACTION</span>
         <div className="steps">
           <span>1. Ingest</span>
           <ChevronRight size={14} />
-          <span>2. Context</span>
+          <span>2. Context Signals</span>
           <ChevronRight size={14} />
-          <span>3. ML Scoring</span>
+          <span>3. XGBoost Score</span>
           <ChevronRight size={14} />
           <strong>4. Decision</strong>
         </div>
 
-        {/* Engine evaluation capability list */}
-        <div className="engine-eval-list">
-          {[
-            'Channel Context Engine',
-            'PaySim XGBoost Model',
-            'Device Change Detection',
-            'Location & Travel Velocity',
-            'Authentication PIN Failures',
-            'Beneficiary Familiarity',
-            'Balance Drain Check',
-            'Circadian Hours Pattern',
-          ].map((item) => (
-            <div className="engine-eval-item" key={item}>
-              <span className="engine-eval-dot" />
-              {item}
-            </div>
-          ))}
+        {/* All 8 signals below are genuinely computed in backend/main.py for every /transactions/check call */}
+        <div className="engine-eval-section">
+          <span className="kicker" style={{ fontSize: 9, marginBottom: 8, display: 'block' }}>CONTEXTUAL RISK SIGNALS — COMPUTED PER TRANSACTION</span>
+          <div className="engine-eval-list">
+            {[
+              ['Channel Context Check', 'Channel-specific heuristic rules (UPI, ATM, Cards)'],
+              ['PaySim XGBoost Model', 'PR-AUC 0.996 · Pre-transaction features only'],
+              ['Device Identity Check', 'Known vs. new/unrecognized device identifier'],
+              ['Location & Travel Velocity', 'Unusual location and rapid distance heuristic'],
+              ['Auth Failure Analysis', 'Count of prior failed authentication attempts'],
+              ['Beneficiary Familiarity', 'Known beneficiary vs. first-time receiver check'],
+              ['Balance Drain Heuristic', 'Transaction consumes >75% of available balance'],
+              ['Circadian Hours Pattern', 'Transaction hour vs. normal daytime window'],
+            ].map(([item, desc]) => (
+              <div className="engine-eval-item" key={item} title={desc}>
+                <span className="engine-eval-dot" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+          <p className="eval-note">Evaluated in the real-time pipeline for each transaction check.</p>
         </div>
 
         {result ? (
@@ -1253,19 +1252,57 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
         {result.decision === 'BLOCK' || result.decision === 'FLAG' ? (
           <>
             <ShieldAlert size={18} />
-            <span>TRANSACTION BLOCKED — High Risk Behavioral Activity</span>
+            <span>DECISION: BLOCK / HIGH RISK — Anomaly Detected</span>
           </>
         ) : result.decision === 'REVIEW' ? (
           <>
             <AlertTriangle size={18} />
-            <span>FLAGGED FOR STEP-UP 2FA / MANUAL REVIEW</span>
+            <span>DECISION: REVIEW — Step-Up Authentication / Verification Recommended</span>
           </>
         ) : (
           <>
             <CheckCircle2 size={18} />
-            <span>{result.requires_confirmation ? 'Risk Check Passed — Confirmation Required' : 'Transaction Approved (Low Risk)'}</span>
+            <span>DECISION: ALLOW — Low Risk Simulated Transaction</span>
           </>
         )}
+      </div>
+
+      {/* Canonical Result Summary Grid */}
+      <div className="sim-key-metrics-grid">
+        <div className="sim-key-metric">
+          <span>Risk Score</span>
+          <strong className={result.risk_level === 'CRITICAL' ? 'purple' : result.risk_level === 'HIGH' ? 'red' : result.risk_level === 'MEDIUM' ? 'amber' : 'lime'}>
+            {displayScore}/100
+          </strong>
+        </div>
+        <div className="sim-key-metric">
+          <span>Risk Level</span>
+          <strong>{result.risk_level}</strong>
+        </div>
+        <div className="sim-key-metric">
+          <span>Decision</span>
+          <strong className={result.decision === 'BLOCK' || result.decision === 'FLAG' ? 'red' : result.decision === 'REVIEW' ? 'amber' : 'lime'}>
+            {decisionLabel}
+          </strong>
+        </div>
+        <div className="sim-key-metric">
+          <span>Amount</span>
+          <strong>{formatCurrency(result.amount)}</strong>
+        </div>
+        <div className="sim-key-metric">
+          <span>Channel / Sender</span>
+          <strong>{result.channel || 'UPI'} · {result.sender_name || result.sender_id || result.sender || 'AMIT001'}</strong>
+        </div>
+        <div className="sim-key-metric">
+          <span>Model</span>
+          <strong>PaySim XGBoost (Realtime)</strong>
+        </div>
+        <div className="sim-key-metric full-width">
+          <span>Top Risk Signal</span>
+          <strong style={{ color: result.decision === 'ALLOW' ? 'var(--ink)' : '#ff8585' }}>
+            {result.top_signal || (reasons[0] ? reasons[0] : 'Baseline Activity (Normal)')}
+          </strong>
+        </div>
       </div>
 
       {/* Detected Signals Checklist */}
@@ -1308,7 +1345,7 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
       {result.decision === 'ALLOW' && !confirmResult && (
         <div className="confirm-box">
           <p className="muted" style={{ margin: '0 0 10px', fontSize: 12 }}>
-            Risk check passed. Confirm to execute fund transfer.
+            Risk evaluation recommendation: ALLOW. Simulate post-check confirmation.
           </p>
           <button
             className="confirm-button"
@@ -1317,23 +1354,23 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
             id="confirm-transaction-btn"
           >
             <CheckCircle2 size={16} />
-            {confirmLoading ? 'Executing Transfer…' : 'CONFIRM & SETTLE TRANSACTION'}
+            {confirmLoading ? 'Recording Decision…' : 'RECORD SIMULATED APPROVAL'}
           </button>
         </div>
       )}
 
-      {/* Settle Success State */}
+      {/* Post-Check Decision State */}
       {confirmResult && (
         <div className="completion-success-card">
           <div className="completion-header">
             <h4>
               <CheckCircle2 size={18} />
-              TRANSACTION COMPLETED &amp; SETTLED
+              RISK EVALUATION COMPLETED
             </h4>
             <div className="completion-checklist">
-              <span><CheckCircle2 size={12} /> Risk check passed</span>
-              <span><CheckCircle2 size={12} /> Transaction authorized</span>
-              <span><CheckCircle2 size={12} /> Ledger updated</span>
+              <span><CheckCircle2 size={12} /> Risk check completed</span>
+              <span><CheckCircle2 size={12} /> Policy recommendation: ALLOW</span>
+              <span><CheckCircle2 size={12} /> Decision recorded to audit log</span>
             </div>
           </div>
 
@@ -1357,18 +1394,18 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
           </div>
 
           <div className="account-impact-section">
-            <span className="kicker">ACCOUNT IMPACT</span>
+            <span className="kicker">SIMULATED ACCOUNT BALANCE</span>
             <div className="balance-grid">
               <div>
                 <span>Previous Balance</span>
                 <strong>{formatCurrency(confirmResult.previous_balance ?? (confirmResult.sender_balance ? confirmResult.sender_balance + result.amount : result.oldbalanceOrg))}</strong>
               </div>
               <div>
-                <span>Amount Debited</span>
+                <span>Amount Evaluated</span>
                 <strong style={{ color: '#ff7070' }}>- {formatCurrency(confirmResult.amount_debited ?? result.amount)}</strong>
               </div>
               <div>
-                <span>Balance After Transaction</span>
+                <span>Simulated Balance After Action</span>
                 <strong style={{ color: '#b8e36b' }}>{formatCurrency(confirmResult.sender_balance)}</strong>
               </div>
             </div>
@@ -1379,11 +1416,12 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
   )
 }
 
-// ── Performance & Benchmarks ────────────────────────────────────────────────
+// ── Engine & Models ───────────────────────────────────────────────────────────
 function Performance({ metrics = {} }) {
   return (
     <div style={{ display: 'grid', gap: 24 }}>
-      {/* Live Engine Performance */}
+
+      {/* Live Telemetry */}
       <section className="panel">
         <div className="panel-head">
           <div>
@@ -1396,48 +1434,157 @@ function Performance({ metrics = {} }) {
           <div className="telemetry-card">
             <span>TRANSACTIONS ANALYZED</span>
             <strong>{(metrics.transactions_analyzed || 0).toLocaleString()}</strong>
-            <small>Live throughput</small>
+            <small>This session</small>
           </div>
           <div className="telemetry-card">
             <span>AVG INFERENCE TIME</span>
-            <strong>1.8 ms</strong>
-            <small>XGBoost + Context</small>
+            <strong>~2 ms</strong>
+            <small>XGBoost + Context Signals</small>
           </div>
           <div className="telemetry-card">
             <span>BLOCKED VOLUME</span>
             <strong style={{ color: '#ff7070' }}>{formatCurrency(metrics.blocked_volume || 0)}</strong>
-            <small>Prevented fraud</small>
+            <small>Estimated prevented fraud</small>
           </div>
           <div className="telemetry-card">
-            <span>FRAUD CATCH RATE</span>
-            <strong style={{ color: '#b8e36b' }}>99.6%</strong>
-            <small>PR-AUC on PaySim</small>
+            <span>MODEL PR-AUC</span>
+            <strong style={{ color: '#b8e36b' }}>0.996</strong>
+            <small>PaySim XGBoost (realtime)</small>
           </div>
         </div>
       </section>
 
-      {/* Model Benchmark Table */}
+      {/* MODEL TRUST: Data Leakage Discovery Story */}
+      <section className="panel model-trust-section">
+        <div className="panel-head">
+          <div>
+            <span className="kicker">MODEL INTEGRITY — WHY THIS MODEL?</span>
+            <h3>Data Leakage Discovery &amp; Resolution</h3>
+          </div>
+          <span className="trust-badge">ENGINEERING INTEGRITY</span>
+        </div>
+        <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
+          The strongest engineering signal in this project is not the final score — it is discovering and correcting data leakage that produced an artificially perfect initial model.
+        </p>
+        <div className="leakage-story-grid">
+          <div className="leakage-step initial">
+            <div className="leakage-step-num">01</div>
+            <div>
+              <span className="kicker" style={{ fontSize: 9 }}>INITIAL MODEL</span>
+              <div className="leakage-metric">PR-AUC = <strong className="red">1.0000</strong></div>
+              <p>Perfect score raised a red flag. Real-world fraud detection does not achieve PR-AUC 1.0.</p>
+            </div>
+          </div>
+          <div className="leakage-connector">→</div>
+          <div className="leakage-step investigation">
+            <div className="leakage-step-num">02</div>
+            <div>
+              <span className="kicker" style={{ fontSize: 9 }}>ROOT CAUSE FOUND</span>
+              <div className="leakage-metric"><code className="red">errorBalanceOrig</code></div>
+              <p>This feature contains post-transaction balance error — information that only exists after a transaction completes. The model was seeing the future.</p>
+            </div>
+          </div>
+          <div className="leakage-connector">→</div>
+          <div className="leakage-step action">
+            <div className="leakage-step-num">03</div>
+            <div>
+              <span className="kicker" style={{ fontSize: 9 }}>ACTION TAKEN</span>
+              <div className="leakage-metric">Feature removed · Retrained</div>
+              <p>Removed <code>errorBalanceOrig</code> and all post-transaction fields. Retained only pre-transaction information: amount, prior balances, type, time.</p>
+            </div>
+          </div>
+          <div className="leakage-connector">→</div>
+          <div className="leakage-step final">
+            <div className="leakage-step-num">04</div>
+            <div>
+              <span className="kicker" style={{ fontSize: 9 }}>FINAL DEPLOYED MODEL</span>
+              <div className="leakage-metric">PR-AUC = <strong className="lime">0.996</strong></div>
+              <p>Precision 0.952 · Recall 0.999 · F1 0.975. Realistic, deployable, and honest. Safe to run at transaction-check time.</p>
+            </div>
+          </div>
+        </div>
+        <div className="leakage-message">
+          &#34;Realistic and deployable &gt; artificially perfect.&#34;
+        </div>
+      </section>
+
+      {/* Primary Model */}
       <section className="panel">
         <div className="panel-head">
           <div>
-            <span className="kicker">OFFLINE BENCHMARKS</span>
-            <h3>Model Evaluation Metrics</h3>
+            <span className="kicker">PRIMARY MODEL — ACTIVE IN REAL-TIME PIPELINE</span>
+            <h3>PaySim XGBoost (Realtime)</h3>
+          </div>
+          <span className="primary-badge">LIVE</span>
+        </div>
+        <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 16px' }}>
+          Trained on the PaySim synthetic payment dataset. Uses only pre-transaction features (amount, prior balances,
+          transaction type, hour, day). Deployed in the <code>/transactions/check</code> endpoint.
+        </p>
+        <div className="primary-model-metrics-grid">
+          <div className="primary-metric-card">
+            <span>PR-AUC</span><strong className="lime">0.996</strong><small>Precision-Recall AUC</small>
+          </div>
+          <div className="primary-metric-card">
+            <span>Precision</span><strong>0.952</strong><small>At default threshold</small>
+          </div>
+          <div className="primary-metric-card">
+            <span>Recall</span><strong>0.999</strong><small>Fraud capture rate</small>
+          </div>
+          <div className="primary-metric-card">
+            <span>F1 Score</span><strong>0.975</strong><small>Harmonic mean</small>
           </div>
         </div>
+        <div className="model-features-note">
+          <span className="kicker" style={{ fontSize: 9, marginBottom: 8, display: 'block' }}>MODEL EXPLAINABILITY — OFFLINE SHAP FEATURE IMPORTANCE</span>
+          <p style={{ color: 'var(--muted)', fontSize: 11, margin: '0 0 10px' }}>
+            Global feature importance from offline SHAP analysis on the trained PaySim XGBoost model. Features explain model behavior; they do not act as independent detection models.
+          </p>
+          <div className="shap-features">
+            {[
+              ['amountToBalanceRatio_pre', 8.35],
+              ['oldbalanceDest', 1.52],
+              ['amount', 1.11],
+              ['dayNumber', 1.02],
+              ['hourOfDay', 0.72],
+            ].map(([feat, shap]) => (
+              <div className="shap-row" key={feat}>
+                <code>{feat}</code>
+                <div className="shap-bar-wrap">
+                  <div className="shap-bar" style={{ width: `${(shap / 8.35) * 100}%` }} />
+                </div>
+                <span>{shap.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Secondary Benchmarks */}
+      <section className="panel">
+        <div className="panel-head">
+          <div>
+            <span className="kicker">OFFLINE BENCHMARKS — NOT ACTIVE IN REAL-TIME PIPELINE</span>
+            <h3>Additional Dataset Evaluations</h3>
+          </div>
+        </div>
+        <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 16px' }}>
+          These models were trained and evaluated as research benchmarks. They are <strong>not wired into the real-time
+            <code>/transactions/check</code> endpoint</strong>. Model files exist in the repository for reference.
+        </p>
         <div className="metric-grid">
           {[
-            ['PaySim (Primary ML)', '0.996', '0.952', '0.999', '0.975', 'Optimized for high-volume peer-to-peer & merchant transfers.'],
-            ['BankSim (Card ML)', '0.9268', '0.6582', '0.9375', '0.7734', 'Trained on European banking transactions & card flows.'],
-            ['IEEE-CIS (E-Comm)', '0.2120', '0.1523', '0.5221', '0.2358', 'High-dimensional e-commerce fraud challenge dataset.'],
+            ['BankSim', '0.9268', '0.6582', '0.9375', '0.7734', 'European synthetic banking card transactions. File: banksim_xgb_model.joblib'],
+            ['IEEE-CIS', '0.2120', '0.1523', '0.5221', '0.2358', 'High-dimensional e-commerce fraud challenge dataset. File: ieee_cis_xgb_model.joblib'],
           ].map(([name, pr, precision, recall, f1, desc]) => (
-            <div className="panel metric-card" key={name}>
-              <span className="kicker">BENCHMARK / {name.split(' ')[0]}</span>
+            <div className="panel metric-card benchmark-secondary" key={name}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                <span className="kicker">BENCHMARK / {name}</span>
+                <span className="offline-badge">OFFLINE</span>
+              </div>
               <h3>{name}</h3>
               <p className="muted" style={{ fontSize: 11, margin: '6px 0 16px' }}>{desc}</p>
-              <div>
-                <b>{pr}</b>
-                <small>PR-AUC</small>
-              </div>
+              <div><b>{pr}</b><small>PR-AUC</small></div>
               <dl>
                 <dt>Precision</dt><dd>{precision}</dd>
                 <dt>Recall</dt><dd>{recall}</dd>
@@ -1447,29 +1594,56 @@ function Performance({ metrics = {} }) {
           ))}
         </div>
       </section>
+
+      {/* Planned Extensions Roadmap */}
+      <section className="panel">
+        <div className="panel-head">
+          <div>
+            <span className="kicker">PLANNED RISK EXTENSIONS — NOT YET ACTIVE</span>
+            <h3>Roadmap: Future Risk Modules</h3>
+          </div>
+          <span className="roadmap-badge">PLANNED</span>
+        </div>
+        <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 16px' }}>
+          These risk modules are architecturally designed (adapters and schema built) but are <strong>not computed in the real-time pipeline</strong>.
+        </p>
+        <div className="roadmap-grid">
+          <div className="roadmap-card">
+            <div className="roadmap-card-header">
+              <Network size={15} />
+              <b>Network Graph Risk</b>
+              <span className="roadmap-tag">ADAPTER BUILT</span>
+            </div>
+            <ul>
+              <li>Network Degree &amp; Clustering Coefficient</li>
+              <li>Suspicious Intermediary / Mule Connections</li>
+              <li>Cyclic Fund Flow Detection</li>
+              <li>High-Risk Merchant Hub Concentration</li>
+            </ul>
+            <p>FraudGraph adapter exists. Requires graph computation layer at check time.</p>
+          </div>
+          <div className="roadmap-card">
+            <div className="roadmap-card-header">
+              <Shield size={15} />
+              <b>AML Monitor</b>
+              <span className="roadmap-tag">ADAPTER BUILT</span>
+            </div>
+            <ul>
+              <li>Fan-in Layering Risk (rapid consolidation)</li>
+              <li>Fan-out Smurfing Risk (rapid dispersal)</li>
+              <li>Dormant Account Reactivation Spike</li>
+              <li>Cross-Border Velocity Surges</li>
+            </ul>
+            <p>AMLSim adapter exists. Requires AML feature computation and monitoring layer.</p>
+          </div>
+        </div>
+      </section>
+
     </div>
   )
 }
 
-// ── SignalPage ────────────────────────────────────────────────────────────────
-function SignalPage({ title, eyebrow, copy, items }) {
-  return (
-    <section className="panel signal-page">
-      <span className="kicker">{eyebrow}</span>
-      <h2>{title}</h2>
-      <p>{copy}</p>
-      <div className="signal-list">
-        {items.map((item, index) => (
-          <div key={item}>
-            <span>0{index + 1}</span>
-            <b>{item}</b>
-            <small>Active in risk pipeline</small>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
+// SignalPage removed — Network Graph and AML Monitor moved to Planned Extensions in Engine & Models page
 
 // ── Detail Drawer ─────────────────────────────────────────────────────────────
 function Detail({ item, onClose }) {
@@ -1492,6 +1666,10 @@ function Detail({ item, onClose }) {
         </div>
 
         <dl className="detail-grid">
+          <dt>Sender / Account</dt>
+          <dd><b>{item.sender || item.merchant_id || 'AMIT001'}</b></dd>
+          <dt>Top Signal</dt>
+          <dd><b>{item.top_signal || (item.reasons?.[0]) || 'Baseline Activity'}</b></dd>
           <dt>Timestamp (IST)</dt>
           <dd>{item.timestamp_ist ? formatIST(item.timestamp_ist) : formatIST(item.audit_timestamp)}</dd>
           <dt>Timestamp (UTC)</dt>
@@ -1501,7 +1679,7 @@ function Detail({ item, onClose }) {
           <dt>Amount</dt>
           <dd><b>{formatCurrency(item.amount)}</b></dd>
           <dt>Model / Engine</dt>
-          <dd>{(item.model_names || ['PaySim XGBoost']).join(', ')}</dd>
+          <dd>{(item.model_names || ['PaySim XGBoost (Realtime)']).join(', ')}</dd>
           <dt>Latency</dt>
           <dd>{item.processing_time_ms ? `${item.processing_time_ms.toFixed(1)} ms` : '< 2 ms'}</dd>
         </dl>
