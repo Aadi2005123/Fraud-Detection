@@ -323,6 +323,7 @@ def transaction_check(request: TransactionCheckRequest):
     unusual_location = database.is_unusual_location(request.sender_id, derived_location)
     inactive_account = database.is_account_inactive(request.sender_id)
     unusually_large = database.is_unusually_large_transaction(request.sender_id, request.amount)
+    amount_risk = database.get_transaction_amount_risk(request.sender_id, request.amount)
     unusual_time = database.is_unusual_time(request.sender_id, hour)
     balance_drain = database.is_balance_drain(request.sender_id, request.amount, balance_override=sender_balance)
     new_beneficiary = request.is_new_beneficiary if request.is_new_beneficiary is not None else database.is_new_beneficiary(request.sender_id, request.receiver_id)
@@ -356,8 +357,8 @@ def transaction_check(request: TransactionCheckRequest):
     if inactive_account:
         context_delta += 0.20
         signal_count += 1
-    if unusually_large:
-        context_delta += 0.20
+    if amount_risk > 0:
+        context_delta += 0.40 * amount_risk
         signal_count += 1
     if unusual_time:
         context_delta += 0.15

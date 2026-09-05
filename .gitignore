@@ -14,3 +14,13 @@ data/ieee-cis-fraud/train_transaction.csv
 
 # Virtual environment
 .venv/
+
+# VinvAI testing and exercise artifacts
+.vinv/
+prompts/
+issues.json
+plan.json
+results.jsonl
+state_ledger.json
+state_ledger.jsonl
+references.json

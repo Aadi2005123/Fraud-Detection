@@ -1396,6 +1396,12 @@ tbody tr:hover {
   color: #f2bd68;
 }
 
+.sig-sev-tag.normal,
+.sig-sev-tag.low {
+  background: rgba(184, 227, 107, 0.15);
+  color: #b8e36b;
+}
+
 .spin {
   animation: spinAnim 1s linear infinite;
 }

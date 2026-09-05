@@ -343,6 +343,78 @@ class Database:
         max_amt = max(history)
         return (amt >= avg_amt * 3.0 and amt > max_amt * 1.8) or (amt >= avg_amt * 5.0) or (amt >= 75000.0)
 
+    def get_transaction_amount_risk(self, account_id: str, amount: float) -> float:
+        """
+        Calculate continuous/severity-aware transaction amount risk between 0.0 and 1.0
+        based on the account's historical transaction baseline.
+        """
+        try:
+            amt = float(amount)
+        except (ValueError, TypeError):
+            return 0.0
+        if amt <= 0:
+            return 0.0
+
+        behavior = self.get_account_behavior(account_id)
+        raw_history = behavior.get("historical_amounts", []) if isinstance(behavior, dict) else []
+        history = []
+        for x in raw_history:
+            try:
+                val = float(x)
+                if val > 0:
+                    history.append(val)
+            except (ValueError, TypeError):
+                continue
+
+        if not history:
+            if amt >= 500000.0:
+                return 1.00
+            if amt >= 200000.0:
+                return 0.75
+            if amt >= 100000.0:
+                return 0.60
+            if amt >= 75000.0:
+                return 0.45
+            if amt >= 50000.0:
+                return 0.30
+            return 0.00
+
+        avg_amt = sum(history) / len(history)
+        max_amt = max(history)
+
+        if avg_amt <= 0:
+            return 0.0
+
+        ratio_to_avg = amt / avg_amt
+        ratio_to_max = amt / max_amt if max_amt > 0 else ratio_to_avg
+
+        if ratio_to_avg >= 100.0:
+            risk = 1.00
+        elif ratio_to_avg >= 50.0:
+            risk = 0.90
+        elif ratio_to_avg >= 20.0:
+            risk = 0.75
+        elif ratio_to_avg >= 10.0:
+            risk = 0.60
+        elif ratio_to_avg >= 5.0:
+            risk = 0.45
+        elif ratio_to_avg >= 3.0:
+            risk = 0.30
+        else:
+            risk = 0.00
+
+        # Absolute threshold safeguard consistent with ₹75,000 baseline
+        if amt >= 500000.0:
+            risk = max(risk, 0.90)
+        elif amt >= 200000.0:
+            risk = max(risk, 0.75)
+        elif amt >= 100000.0:
+            risk = max(risk, 0.50)
+        elif amt >= 75000.0:
+            risk = max(risk, 0.30)
+
+        return min(1.0, max(0.0, float(risk)))
+
     def is_unusual_time(self, account_id: str, hour: int) -> bool:
         behavior = self.get_account_behavior(account_id)
         start_hour, end_hour = behavior.get("normal_hours", (9, 23))

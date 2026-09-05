@@ -1200,21 +1200,46 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
 
   // Dynamic signal checklist
   const signalItems = detectedSignals.length > 0
-    ? detectedSignals.map((s) => ({
-      label: s.label || s.signal_name || '',
-      triggered: s.triggered ?? true,
-      severity: s.severity || 'HIGH',
-    }))
+    ? detectedSignals.map((s) => {
+      const isAlert = s.alert !== undefined ? Boolean(s.alert) : (s.triggered ?? false)
+      const name = s.name || s.label || s.signal_name || 'Signal'
+      const status = s.status ? ` — ${s.status}` : ''
+      const label = `${name}${status}`
+
+      let severity = s.severity
+      if (!severity) {
+        if (!isAlert) {
+          severity = 'NORMAL'
+        } else {
+          const code = (s.signal_code || '').toUpperCase()
+          if (code === 'IMPOSSIBLE_TRAVEL' || (code === 'MULTIPLE_FAILED_AUTH' && s.status?.includes('4'))) {
+            severity = 'CRITICAL'
+          } else if (code === 'NEW_DEVICE' || code === 'MULTIPLE_FAILED_AUTH' || code === 'BALANCE_DRAIN' || code === 'DORMANT_ACCOUNT_REACTIVATION' || code === 'HIGH_VELOCITY') {
+            severity = 'HIGH'
+          } else if (code === 'AMOUNT_ANOMALY') {
+            severity = result.risk_level === 'CRITICAL' ? 'CRITICAL' : (result.risk_level === 'HIGH' || (result.amount && result.amount >= 100000)) ? 'HIGH' : 'MEDIUM'
+          } else {
+            severity = 'MEDIUM'
+          }
+        }
+      }
+
+      return {
+        label,
+        triggered: isAlert,
+        severity,
+      }
+    })
     : [
-      { label: riskSignals.device_changed ? 'Unrecognized / New Device' : 'Known Device', triggered: !!riskSignals.device_changed },
-      { label: 'Multiple Failed Authentication Attempts', triggered: !!riskSignals.multiple_failed_pin_attempts },
-      { label: 'Unusual Geographical Location', triggered: !!riskSignals.unusual_location },
-      { label: 'Dormant Account Suddenly Active', triggered: !!riskSignals.inactive_account },
-      { label: 'High Transaction Amount Anomaly', triggered: !!riskSignals.unusually_large_transaction },
-      { label: 'Impossible Travel Velocity', triggered: !!riskSignals.impossible_travel },
-      { label: 'Sudden Account Balance Drain', triggered: !!riskSignals.balance_drain },
-      { label: 'Unusual Hour (03:00 AM IST)', triggered: !!riskSignals.unusual_time },
-      { label: 'Unfamiliar New Beneficiary', triggered: !!riskSignals.new_beneficiary },
+      { label: `Device Identity — ${riskSignals.device_changed ? 'Unrecognized / New Device' : 'Known Device'}`, triggered: !!riskSignals.device_changed, severity: riskSignals.device_changed ? 'HIGH' : 'NORMAL' },
+      { label: `Authentication Context — ${riskSignals.multiple_failed_pin_attempts ? 'Multiple Failed PIN Attempts' : 'Normal Authentication'}`, triggered: !!riskSignals.multiple_failed_pin_attempts, severity: riskSignals.multiple_failed_pin_attempts ? 'HIGH' : 'NORMAL' },
+      { label: `Geographic Context — ${riskSignals.unusual_location ? 'Unusual Location' : 'Normal Location'}`, triggered: !!riskSignals.unusual_location, severity: riskSignals.unusual_location ? 'HIGH' : 'NORMAL' },
+      { label: `Account Activity State — ${riskSignals.inactive_account ? 'Dormant Account Suddenly Active' : 'Active Account'}`, triggered: !!riskSignals.inactive_account, severity: riskSignals.inactive_account ? 'HIGH' : 'NORMAL' },
+      { label: `Amount vs Baseline — ${riskSignals.unusually_large_transaction ? 'High Transaction Amount Anomaly' : 'Within Expected Range'}`, triggered: !!riskSignals.unusually_large_transaction, severity: riskSignals.unusually_large_transaction ? (result.risk_level === 'CRITICAL' ? 'CRITICAL' : result.risk_level === 'HIGH' ? 'HIGH' : 'MEDIUM') : 'NORMAL' },
+      { label: `Geographic Velocity — ${riskSignals.impossible_travel ? 'Impossible Travel Velocity' : 'Normal Velocity'}`, triggered: !!riskSignals.impossible_travel, severity: riskSignals.impossible_travel ? 'CRITICAL' : 'NORMAL' },
+      { label: `Balance Consumption — ${riskSignals.balance_drain ? 'Sudden Account Balance Drain' : 'Healthy Balance Retention'}`, triggered: !!riskSignals.balance_drain, severity: riskSignals.balance_drain ? 'HIGH' : 'NORMAL' },
+      { label: `Activity Window — ${riskSignals.unusual_time ? 'Outside Normal Hours' : 'Within Normal Hours'}`, triggered: !!riskSignals.unusual_time, severity: riskSignals.unusual_time ? 'MEDIUM' : 'NORMAL' },
+      { label: `Beneficiary Relationship — ${riskSignals.new_beneficiary ? 'Unfamiliar New Beneficiary' : 'Established Beneficiary'}`, triggered: !!riskSignals.new_beneficiary, severity: riskSignals.new_beneficiary ? 'MEDIUM' : 'NORMAL' },
     ]
 
   return (
@@ -1313,8 +1338,10 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
             <div key={idx} className={`signal-check-item ${item.triggered ? 'alert' : 'ok'}`}>
               <span className="icon">{item.triggered ? '✕' : '✓'}</span>
               <span>{item.label}</span>
-              {item.triggered && item.severity && (
-                <span className={`sig-sev-tag ${item.severity.toLowerCase()}`}>{item.severity}</span>
+              {item.triggered ? (
+                <span className={`sig-sev-tag ${(item.severity || 'HIGH').toLowerCase()}`}>{item.severity || 'HIGH'}</span>
+              ) : (
+                <span className="sig-sev-tag normal">{item.severity || 'NORMAL'}</span>
               )}
             </div>
           ))}
@@ -1345,7 +1372,7 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
       {result.decision === 'ALLOW' && !confirmResult && (
         <div className="confirm-box">
           <p className="muted" style={{ margin: '0 0 10px', fontSize: 12 }}>
-            Risk evaluation recommendation: ALLOW. Simulate post-check confirmation.
+            Risk evaluation recommendation: ALLOW. (Simulation demo only — no actual funds are transferred or settled).
           </p>
           <button
             className="confirm-button"
@@ -1354,7 +1381,7 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
             id="confirm-transaction-btn"
           >
             <CheckCircle2 size={16} />
-            {confirmLoading ? 'Recording Decision…' : 'RECORD SIMULATED APPROVAL'}
+            {confirmLoading ? 'Recording Decision…' : 'RECORD SIMULATED APPROVAL (DEMO)'}
           </button>
         </div>
       )}
@@ -1365,12 +1392,12 @@ function RiskResultCard({ result, confirmResult, confirm, confirmLoading }) {
           <div className="completion-header">
             <h4>
               <CheckCircle2 size={18} />
-              RISK EVALUATION COMPLETED
+              SIMULATED RISK EVALUATION COMPLETED
             </h4>
             <div className="completion-checklist">
-              <span><CheckCircle2 size={12} /> Risk check completed</span>
+              <span><CheckCircle2 size={12} /> Simulated risk check completed</span>
               <span><CheckCircle2 size={12} /> Policy recommendation: ALLOW</span>
-              <span><CheckCircle2 size={12} /> Decision recorded to audit log</span>
+              <span><CheckCircle2 size={12} /> Decision recorded to demo audit log</span>
             </div>
           </div>
 
